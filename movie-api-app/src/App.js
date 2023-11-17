@@ -29,6 +29,19 @@ function App() {
     console.log(formData);
   }
 
+  const testJSON = (text) => {
+    if (typeof text !== "string") {
+        return false;
+    }
+    try {
+        JSON.parse(text);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+ 
+
   const makeAPICall = (e) => {
     e.preventDefault();
     let apiUrl = "";
@@ -57,16 +70,16 @@ function App() {
     setLoading(true);
     if (method === "GET") {
       fetch(apiUrl)
-      .then(res => {
+      .then(async res => {
         setContentType(res.headers.get("Content-Type"));
-        return contentType === "application/json" ? res.json() : res.arrayBuffer();
-      })
-      .then(data => {
-        if (contentType === "application/json") {
+        if (res.headers.get("Content-Type").includes("application/json")) {
+          const data = await res.json();
           setContent(JSON.stringify(data, null, 2));
         } else {
-          console.log("base64: " + Buffer.from(data, "binary").toString("base64"))
-          setContent(Buffer.from(data, "binary").toString("base64"));
+          const blob = await res.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+          const imageBuffer = Buffer.from(arrayBuffer);
+          setContent(Buffer.from(imageBuffer, "binary").toString("base64"));
         }
       })
       .finally(() => setLoading(false));
@@ -75,12 +88,12 @@ function App() {
         method: "POST", //POST, PUT, DELETE, etc.
         headers: {
           "Content-Type": "image/png",
-         
         },
         body: formData.file,
       })
-      .then(res => res.json())
-      .then(data => {
+      .then(async res => {
+        setContentType(res.headers.get("Content-Type"));
+        const data = await res.json();
         console.log(data);
         setContent(JSON.stringify(data));
       })

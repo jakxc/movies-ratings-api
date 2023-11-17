@@ -20,7 +20,6 @@ const routing =  async (req, res) => {
      // /movies/search?title={title}&page={page} : GET
     if ((url.match(/\/movies\/search\?([a-zA-Z0-9])/) || url.startsWith("/movies/search")) && method.toLowerCase() === "get") { 
         res.setHeader("Access-Control-Allow-Origin", "*");   
-        res.setHeader("Content-Type", "application/json"); 
        
         try {
             const params = new URLSearchParams(req.url.split("?")[1]);
@@ -146,10 +145,6 @@ const routing =  async (req, res) => {
                                 throw err;
                             };
 
-                            // res.setHeader("Content-Type", "image/png");
-                            // res.writeHead(200);
-                            // res.write(data, "binary");
-                            // res.end();
                             handleResponse(res, 200, "image/png", data, "binary");
                         });
                     }
