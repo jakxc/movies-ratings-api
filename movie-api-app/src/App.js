@@ -12,7 +12,7 @@ function App() {
     file: ""
   })
 
-  const [isImage, setIsImage] = useState(false);
+  const [contentType, setContentType] = useState("application/json");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -38,36 +38,35 @@ function App() {
     switch(true) {
       case (endpoint === "/movies/search/:title"):
         apiUrl = `http://localhost:3000/movies/search?title=${formData.title}&page=${formData.page}`;
-        setIsImage(false);
         break;
       case (endpoint === "/movies/data/:id"):
         apiUrl = `http://localhost:3000/movies/data?id=${formData.id}&country=${formData.country}`;
-        setIsImage(false);
         break;
       case (endpoint === "/posters/:id"):
         apiUrl = `http://localhost:3000/posters/${formData.id}`;
-        setIsImage(true);
         break;
       case (endpoint === "/posters/add/:id"):
         apiUrl = `http://localhost:3000/posters/add/${formData.id}`;
-        setIsImage(false);
         method = "POST";
         break;
       default: 
         console.log("Endpoint is not applicable");
-        setIsImage(false);
         break;
     }
 
     setLoading(true);
     if (method === "GET") {
       fetch(apiUrl)
-      .then(res => isImage ? res.arrayBuffer() : res.json())
+      .then(res => {
+        setContentType(res.headers.get("Content-Type"));
+        return contentType === "application/json" ? res.json() : res.arrayBuffer();
+      })
       .then(data => {
-        if (isImage) {
-          setContent(Buffer.from(data, 'binary').toString('base64'));
-        } else {
+        if (contentType === "application/json") {
           setContent(JSON.stringify(data, null, 2));
+        } else {
+          console.log("base64: " + Buffer.from(data, "binary").toString("base64"))
+          setContent(Buffer.from(data, "binary").toString("base64"));
         }
       })
       .finally(() => setLoading(false));
@@ -152,7 +151,9 @@ function App() {
           </div>
           <button className="btn" onClick={makeAPICall}>Submit</button>
         </form>
-        <pre className="content-container">{loading ? <>Loading...</> : isImage ? <img src={`data:image/png;base64,${content}`} alt="Poster" /> : <>{content}</> }</pre>
+        <pre className="content-container">{loading ? <>Loading...</> : contentType === "application/json" 
+        ? <>{content}</> 
+        : <img src={`data:image/png;base64,${content}`} alt="Poster" /> }</pre>
       </div>
     </div>
   );

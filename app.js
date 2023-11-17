@@ -24,7 +24,7 @@ const routing =  async (req, res) => {
        
         try {
             const params = new URLSearchParams(req.url.split("?")[1]);
-            const title = params.get("title")
+            const title = params.get("title");
             const page = params.get("page") || 1;
             const movies = await getMovieByTitle(title, page);
            
@@ -35,7 +35,7 @@ const routing =  async (req, res) => {
                         message: "You must supply a title!" 
                     }))
                     break;
-                case (!parseInt(page) ): 
+                case (!parseInt(page) || parseInt(page) < 1): 
                     handleResponse(res, 400, "application/json", JSON.stringify({ 
                         error: true,
                         message: "You must supply a valid page number!" 
@@ -163,7 +163,7 @@ const routing =  async (req, res) => {
             console.log(err["message"]);
         }
         // /posters/add/:id : POST
-    } else if ((url.match(/\/posters\/add\/([a-zA-Z0-9])/) || url.startsWith("/posters/add"))) {
+    } else if ((url.match(/\/posters\/add\/([a-zA-Z0-9])/) || url.startsWith("/posters/add")) && (method.toLowerCase() === "post" || method.toLowerCase() === "options")) {
         if (method.toLowerCase() == "options") {
             res.writeHead(200, {
               "Access-Control-Allow-Origin": "*",
@@ -210,10 +210,14 @@ const routing =  async (req, res) => {
                         case (!imgExtRegex.test(fileType["ext"])):
                             handleResponse(res, 400, "application/json",JSON.stringify({ 
                                 error: true, 
-                                message: "Incorrect file type!" }));
+                                message: "Incorrect file type!" 
+                            }));
                             break;
                         case (existsSync(filePath)):
-                            handleResponse(res, 400, "application/json",JSON.stringify({ error: true, message: "Poster for this movie already exists!" }));
+                            handleResponse(res, 400, "application/json",JSON.stringify({ 
+                                error: true, 
+                                message: "Poster for this movie already exists!" 
+                            }));
                             break;
                         default: 
                             writeFileSync(filePath, buffer, (err) => {
