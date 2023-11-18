@@ -22,24 +22,27 @@ const routing =  async (req, res) => {
         res.setHeader("Access-Control-Allow-Origin", "*");   
        
         try {
-            const params = new URLSearchParams(req.url.split("?")[1]);
+            const params = new URLSearchParams(req.url.split("?")[1]); 
             const title = params.get("title");
             const page = params.get("page") || 1;
             const movies = await getMovieByTitle(title, page);
            
             switch (true) {
+                // 400 response if no title is provided
                 case (!title || title.length === 0):
                     handleResponse(res, 400, "application/json", JSON.stringify({ 
                         error: true, 
                         message: "You must supply a title!" 
                     }))
                     break;
+                    // 400 response if invalid page number is provided
                 case (!parseInt(page) || parseInt(page) < 1): 
                     handleResponse(res, 400, "application/json", JSON.stringify({ 
                         error: true,
                         message: "You must supply a valid page number!" 
                     }))
                     break;
+                    // 404 response if no movie is found
                 case (!movies["totalResults"]):
                     handleResponse(res, 404, "application/json", JSON.stringify({ message: movies["Error"] || "Movie/s not found!" }))
                     break;
@@ -68,11 +71,13 @@ const routing =  async (req, res) => {
 
             switch (true) {
                 case (!id || id.length === 0):
+                     // 400 response if no id is provided
                     handleResponse(res, 400, "application/json", JSON.stringify({ 
                         error: true,
                         message: "You must supply an imdbID!" 
                     }));
                     break;
+                     // 404 response if no movie is found
                 case (movie["Response"] === "False"):
                     handleResponse(res, 404, "application/json", JSON.stringify({ message: movie["Error"] || "Movie not found!" }));
                     break;
@@ -98,18 +103,22 @@ const routing =  async (req, res) => {
             const filePath = `./posters/${id}.png`;
 
             switch (true) {
+                // 400 response if no id is provided
                 case (!id || id.length === 0):
                     handleResponse(res, 400, "application/json", JSON.stringify({ 
                         error: true, 
                         message: "You must supply an imdbID!" 
                     }));
                     break;
+                    // 404 response if no movie is found
                 case (movie["Response"] === "False"):
                     handleResponse(res, 404, "application/json", JSON.stringify({ message: movie["Error"] || "Movie not found!" }));
                     break;
+                    // 404 response if no poster file path and poster property on the movie object is found
                 case (!existsSync(filePath) && !posterUrl):
                     handleResponse(res, 404, "application/json", JSON.stringify({ message: "Poster not found!" }));
                     break;
+                    // 200 response if movie poster file exists in /posters
                 case (existsSync(filePath)): 
                     readFile(filePath, "binary", (err, data) => {
                         if (err) {
@@ -185,29 +194,34 @@ const routing =  async (req, res) => {
 
                 try {
                     switch (true) {
+                       // 400 response if no id is provided
                         case (!id || id.length === 0):
                             handleResponse(res, 400, "application/json", JSON.stringify({ 
                                 error: true, 
                                 message: "You must supply an imdbID!" 
                             }));
                             break;
+                            // 404 response if no movie is found
                         case (movie["Response"] === "False"):
                             handleResponse(res, 404, "application/json", JSON.stringify({ 
                                 message: movie["Error"] || "Movie not found!" 
                             }));
                             break;
+                            // 400 response if there is no body on the request
                         case (!body || body.length === 0):
                             handleResponse(res, 400, "application/json",JSON.stringify({ 
                                 error: true, 
                                 message: "You must supply an image file!" 
                             }));
                             break;
+                            // 400 response if wrong file type is supplied
                         case (!imgExtRegex.test(fileType["ext"])):
                             handleResponse(res, 400, "application/json",JSON.stringify({ 
                                 error: true, 
                                 message: "Incorrect file type!" 
                             }));
                             break;
+                            // 400 response if file path already exists in /posters
                         case (existsSync(filePath)):
                             handleResponse(res, 400, "application/json",JSON.stringify({ 
                                 error: true, 
