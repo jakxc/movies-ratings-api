@@ -23,8 +23,8 @@ const routing =  async (req, res) => {
        
         try {
             const params = new URLSearchParams(req.url.split("?")[1]); 
-            const title = params.get("title");
-            const page = params.get("page") || 1;
+            const title = params.get("title"); // get title from params
+            const page = params.get("page") || 1; // get page from params
             const movies = await getMovieByTitle(title, page);
            
             switch (true) {
@@ -61,12 +61,11 @@ const routing =  async (req, res) => {
         res.setHeader("Access-Control-Allow-Origin", "*");   
 
         try {
-            // get id from url
             const params = new URLSearchParams(req.url.split("?")[1]);
-            const id = params.get("id");
-            const country = params.get("country");
-            const movie = await getMovieById(id);
-            const streaming = await getStreamingById(id);
+            const id = params.get("id"); // get id from params
+            const country = params.get("country"); // get country from params
+            const movie = await getMovieById(id); 
+            const streaming = await getStreamingById(id); 
             const combinedData = combineMovieData(movie, streaming);
 
             switch (true) {
@@ -82,6 +81,7 @@ const routing =  async (req, res) => {
                     handleResponse(res, 404, "application/json", JSON.stringify({ message: movie["Error"] || "Movie not found!" }));
                     break;
                 default:
+                    // Filter streamingInfo if country parameter is provided, otherwise include all available countries
                     const filteredStreamingData = { 
                         ...combinedData, 
                          streamingInfo: country ? { [country]: combinedData["streamingInfo"][country] } : combinedData["streamingInfo"]}
@@ -97,7 +97,7 @@ const routing =  async (req, res) => {
         res.setHeader("Access-Control-Allow-Origin", "*");   
 
         try {
-            const id = req.url.split("/")[2];
+            const id = req.url.split("/")[2]; // get id from url
             const movie = await getMovieById(id);
             const posterUrl = getMoviePoster(movie);
             const filePath = `./posters/${id}.png`;
@@ -167,8 +167,10 @@ const routing =  async (req, res) => {
             console.log(err["message"]);
         }
         // /posters/add/:id : POST
-    } else if ((url.match(/\/posters\/add\/([a-zA-Z0-9])/) || url.startsWith("/posters/add")) && (method.toLowerCase() === "post" || method.toLowerCase() === "options")) {
-        if (method.toLowerCase() == "options") {
+    } else if ((url.match(/\/posters\/add\/([a-zA-Z0-9])/) || url.startsWith("/posters/add")) 
+    && (method.toLowerCase() === "post" || method.toLowerCase() === "options")) {
+        // Fixes error: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+        if (method.toLowerCase() === "options") {
             res.writeHead(200, {
               "Access-Control-Allow-Origin": "*",
               "Access-Control-Allow-Headers": "Content-Type",
@@ -185,7 +187,7 @@ const routing =  async (req, res) => {
                 body.push(chunk);
             });
             req.on("end", async () => {
-                const id = req.url.split("/")[3];
+                const id = req.url.split("/")[3]; // get id from url
                 const movie = await getMovieById(id);
                 const buffer = Buffer.concat(body);
                 const filePath = `./posters/${id}.png`;
